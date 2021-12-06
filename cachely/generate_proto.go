@@ -1,0 +1,2 @@
+//go:generate protoc --proto_path=. --proto_path=$HOME/go/src --go_out=. --go-grpc_out=require_unimplemented_servers=false:. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative app.proto
+package cachely
