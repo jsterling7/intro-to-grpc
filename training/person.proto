@@ -1,0 +1,21 @@
+syntax = "proto3";
+package training;
+option go_package = "github.com/jsterling7/training";
+
+import "google/protobuf/timestamp.proto";
+
+// TODO: create a message called Person with the following fields:
+// - name of type string
+// - age of type int
+// - preferences which is a map[string]string{}
+// - Add a repeated field of type string called kids.
+// - add a field called birthdate and use the well known type for google.protobuf.Timestamp
+// - Use go generate with a generate.go file to generate the code.
+
+message Person {
+  string name = 1;
+  uint32 age = 2;
+  map<string, string> preferences = 3;
+  repeated string kids = 4;
+  google.protobuf.Timestamp birthdate = 5;
+}
