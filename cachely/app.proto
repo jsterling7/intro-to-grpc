@@ -6,6 +6,7 @@ service Cache {
   rpc Get (GetRequest) returns (GetResponse);
   rpc Put (PutRequest) returns (PutResponse);
   rpc Delete (DeleteRequest) returns (DeleteResponse);
+  rpc PutMany (stream PutManyRequest) returns (PutManyResponse);
 }
 
 message GetRequest {
@@ -33,3 +34,10 @@ message DeleteRequest {
 message DeleteResponse {
   string key = 1;
 }
+
+message PutManyRequest {
+  string key = 1;
+  bytes value = 2;
+}
+
+message PutManyResponse {}

@@ -26,6 +26,8 @@ func main() {
 
 	ctx := context.Background()
 
+	// ------- exercise 1 -------
+
 	// write a value
 	_, err = c.Put(ctx, &cachely.PutRequest{
 		Key:   "band",
@@ -72,4 +74,31 @@ func main() {
 	default:
 		log.Fatal(err)
 	}
+
+	// --------------
+
+	// ------- exercise 2 -------
+	// TODO call `PutMany` from the client and retrieve a reference to the `stream`
+
+	//for i := 0; i < 100; i++ {
+	//	key := fmt.Sprintf("key-%d", i)
+	//	value := []byte(fmt.Sprintf("value-%d", i))
+	//	// TODO: add the key/value with the stream
+	//}
+
+	// TODO: Close the stream
+
+	/* Uncomment to verify your work
+	// Verify all the values are there
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("key-%d", i)
+		item, err := c.Get(ctx, &cachely.GetRequest{
+			Key: key,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("received: key: %q, value: %q\n", key, string(item.GetValue()))
+	}
+	*/
 }

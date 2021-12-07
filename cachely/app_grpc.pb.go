@@ -21,6 +21,7 @@ type CacheClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	PutMany(ctx context.Context, opts ...grpc.CallOption) (Cache_PutManyClient, error)
 }
 
 type cacheClient struct {
@@ -58,6 +59,40 @@ func (c *cacheClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grp
 	return out, nil
 }
 
+func (c *cacheClient) PutMany(ctx context.Context, opts ...grpc.CallOption) (Cache_PutManyClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Cache_ServiceDesc.Streams[0], "/cachely.Cache/PutMany", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cachePutManyClient{stream}
+	return x, nil
+}
+
+type Cache_PutManyClient interface {
+	Send(*PutManyRequest) error
+	CloseAndRecv() (*PutManyResponse, error)
+	grpc.ClientStream
+}
+
+type cachePutManyClient struct {
+	grpc.ClientStream
+}
+
+func (x *cachePutManyClient) Send(m *PutManyRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *cachePutManyClient) CloseAndRecv() (*PutManyResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(PutManyResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CacheServer is the server API for Cache service.
 // All implementations should embed UnimplementedCacheServer
 // for forward compatibility
@@ -65,6 +100,7 @@ type CacheServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Put(context.Context, *PutRequest) (*PutResponse, error)
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
+	PutMany(Cache_PutManyServer) error
 }
 
 // UnimplementedCacheServer should be embedded to have forward compatible implementations.
@@ -79,6 +115,9 @@ func (UnimplementedCacheServer) Put(context.Context, *PutRequest) (*PutResponse,
 }
 func (UnimplementedCacheServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedCacheServer) PutMany(Cache_PutManyServer) error {
+	return status.Errorf(codes.Unimplemented, "method PutMany not implemented")
 }
 
 // UnsafeCacheServer may be embedded to opt out of forward compatibility for this service.
@@ -146,6 +185,32 @@ func _Cache_Delete_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Cache_PutMany_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CacheServer).PutMany(&cachePutManyServer{stream})
+}
+
+type Cache_PutManyServer interface {
+	SendAndClose(*PutManyResponse) error
+	Recv() (*PutManyRequest, error)
+	grpc.ServerStream
+}
+
+type cachePutManyServer struct {
+	grpc.ServerStream
+}
+
+func (x *cachePutManyServer) SendAndClose(m *PutManyResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *cachePutManyServer) Recv() (*PutManyRequest, error) {
+	m := new(PutManyRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Cache_ServiceDesc is the grpc.ServiceDesc for Cache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +231,12 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Cache_Delete_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "PutMany",
+			Handler:       _Cache_PutMany_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "app.proto",
 }
